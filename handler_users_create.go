@@ -23,21 +23,21 @@ func (a *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	if err := decoder.Decode(&userEmail); err != nil {
-		respondWithError(w, http.StatusBadRequest, "Something went wrong")
+		respondWithError(w, http.StatusBadRequest, "Something went wrong", err)
 		return
 	}
 
 	dbUser, err := a.db.CreateUser(r.Context(), userEmail.Email)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Something went wrong")
+		respondWithError(w, http.StatusInternalServerError, "Something went wrong", err)
 		return
 	}
 
 	parsedUser := User{
-		ID: dbUser.ID,
+		ID:        dbUser.ID,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
-		Email: dbUser.Email,
+		Email:     dbUser.Email,
 	}
 
 	respondWithJSON(w, http.StatusCreated, parsedUser)

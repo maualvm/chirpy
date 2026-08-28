@@ -30,6 +30,7 @@ func (a *apiConfig) handlerMetricsReset(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Error resetting users table: " + err.Error()))
+		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Metrics have been reset and users table truncated."))
