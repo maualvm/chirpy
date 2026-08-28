@@ -76,6 +76,7 @@ func (a *apiConfig) handlerCreateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusCreated, Chirp{
+		ID:        dbChirp.ID,
 		Body:      dbChirp.Body,
 		CreatedAt: dbChirp.CreatedAt,
 		UpdatedAt: dbChirp.UpdatedAt,
