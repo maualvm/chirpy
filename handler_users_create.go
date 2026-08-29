@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/maualvm/chirpy/internal/auth"
+	"github.com/maualvm/chirpy/internal/database"
 )
 
 type User struct {
@@ -16,29 +18,38 @@ type User struct {
 }
 
 func (a *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	type requestBody struct {
-		Email string `json:"email"`
+	type createUserRequest struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
 	}
-	userEmail := requestBody{}
+
+	createRequest := createUserRequest{}
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	if err := decoder.Decode(&userEmail); err != nil {
+	if err := decoder.Decode(&createRequest); err != nil {
 		respondWithError(w, http.StatusBadRequest, "Something went wrong", err)
 		return
 	}
 
-	dbUser, err := a.db.CreateUser(r.Context(), userEmail.Email)
+	hashedPassword, err := auth.HashPassword(createRequest.Password)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Something went wrong", err)
+		respondWithError(w, http.StatusInternalServerError, "Could not hash password", err)
+		return
+	}
+	dbUser, err := a.db.CreateUser(r.Context(), database.CreateUserParams{
+		Email:          createRequest.Email,
+		HashedPassword: hashedPassword,
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Could not create user", err)
 		return
 	}
 
-	parsedUser := User{
+	respondWithJSON(w, http.StatusCreated, User{
 		ID:        dbUser.ID,
 		CreatedAt: dbUser.CreatedAt,
 		UpdatedAt: dbUser.UpdatedAt,
 		Email:     dbUser.Email,
-	}
+	})
 
-	respondWithJSON(w, http.StatusCreated, parsedUser)
 }
